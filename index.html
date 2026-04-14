@@ -494,11 +494,12 @@
 <!-- Header -->
 <header>
   <span class="logo">✦ COSMIC SCORE</span>
-  <span class="version-badge">v1.4.0</span>
+  <span class="version-badge">v1.5.0</span>
   <input class="song-name-input" id="song-name" type="text" value="Untitled Song" title="曲名" placeholder="曲名" />
   <div class="header-sep"></div>
   <button class="btn" id="btn-load">読み込み</button>
   <button class="btn primary" id="btn-save">保存</button>
+  <button class="btn" id="btn-export-midi">🎼 MIDI出力</button>
   <button class="btn" id="btn-apikey">🔑 API Key</button>
 </header>
 
@@ -606,7 +607,7 @@
   <span id="status-pos">位置: 1:1:0</span>
   <span id="status-notes">ノート数: 0</span>
   <span id="status-info">ツール: 描画</span>
-  <span class="status-version">COSMIC SCORE v1.4.0</span>
+  <span class="status-version">COSMIC SCORE v1.5.0</span>
 </div>
 
 <!-- Toast -->
@@ -631,6 +632,7 @@
 <script type="module" src="editor.js"></script>
 <script type="module" src="ai.js"></script>
 <script type="module" src="keyboard.js"></script>
+<script type="module" src="midi.js"></script>
 
 <!-- Welcome Modal -->
 <div class="modal-overlay" id="modal-welcome">
