@@ -238,6 +238,7 @@ function render() {
     c.fillText('← 左列の鍵盤は龴ガイド / 上が高い音、下が低い音', cx, cy + 34);
     c.restore();
   }
+}
 
 function drawPianoKeys(c) {
   for (let pi = 0; pi < PITCH_COUNT; pi++) {
