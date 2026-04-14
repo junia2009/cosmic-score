@@ -428,6 +428,8 @@
       position: relative;
       -webkit-user-select: none;
       user-select: none;
+      touch-action: none;
+      -webkit-touch-callout: none;
     }
     .kb-white {
       position: absolute;
@@ -441,6 +443,8 @@
       justify-content: center;
       padding-bottom: 5px;
       transition: background .05s;
+      touch-action: none;
+      -webkit-touch-callout: none;
     }
     .kb-white:hover { background: #c8b4ff; }
     .kb-white.kb-active { background: var(--accent); }
@@ -453,6 +457,8 @@
       cursor: pointer;
       z-index: 2;
       transition: background .05s;
+      touch-action: none;
+      -webkit-touch-callout: none;
     }
     .kb-black:hover { background: #4c3a8c; }
     .kb-black.kb-active { background: var(--accent2); }

@@ -149,16 +149,50 @@ function renderKeys() {
   }
 }
 
-/* ===== マウスイベント ===== */
+/* ===== マウス / タッチイベント ===== */
 function attachKeyEvents(el, pitch) {
-  const noteKey = 'mouse_' + pitch;
-  el.addEventListener('mousedown', e => {
+  const mouseKey = 'mouse_' + pitch;
+  let touchActive = false; // タッチ中はマウス合成イベントを無視
+
+  // ── タッチ（iPad / スマホ）──
+  el.addEventListener('touchstart', e => {
+    // コンテキストメニュー・テキスト選択・合成マウスイベントを全阻止
     e.preventDefault();
-    startNote(noteKey, pitch);
+    touchActive = true;
+    Array.from(e.changedTouches).forEach(t => {
+      startNote('touch_' + t.identifier + '_' + pitch, pitch);
+    });
+  }, { passive: false });
+
+  el.addEventListener('touchend', e => {
+    e.preventDefault();
+    Array.from(e.changedTouches).forEach(t => {
+      endNote('touch_' + t.identifier + '_' + pitch);
+    });
+    // 合成マウスイベントが後から来るので少し待ってフラグをリセット
+    setTimeout(() => { touchActive = false; }, 500);
+  }, { passive: false });
+
+  el.addEventListener('touchcancel', e => {
+    Array.from(e.changedTouches).forEach(t => {
+      endNote('touch_' + t.identifier + '_' + pitch);
+    });
+    setTimeout(() => { touchActive = false; }, 500);
   });
-  el.addEventListener('mouseup',    () => endNote(noteKey));
+
+  // ── マウス（PC）──
+  el.addEventListener('mousedown', e => {
+    if (touchActive) return;
+    e.preventDefault();
+    startNote(mouseKey, pitch);
+  });
+  el.addEventListener('mouseup', () => {
+    if (touchActive) return;
+    endNote(mouseKey);
+  });
   el.addEventListener('mouseleave', () => {
-    if (activeNotes.has(noteKey)) endNote(noteKey);
+    if (touchActive) return;
+    if (activeNotes.has(mouseKey)) endNote(mouseKey);
   });
 }
 
