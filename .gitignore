@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.suo
+*.user
+
+# Local env (APIキーなどは絶対にコミットしない)
+.env
+*.env.local
