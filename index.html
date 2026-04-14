@@ -58,6 +58,17 @@
       white-space: nowrap;
     }
 
+    .version-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
     .header-sep { flex: 1; }
 
     .song-name-input {
@@ -96,6 +107,7 @@
       cursor: pointer;
       transition: background .15s, border-color .15s;
       white-space: nowrap;
+      -webkit-user-select: none;
       user-select: none;
     }
     .btn:hover { background: var(--border); }
@@ -304,6 +316,8 @@
       flex-shrink: 0;
     }
 
+    .status-version { margin-left: auto; }
+
     /* ===== Toast ===== */
     #toast {
       position: fixed;
@@ -320,9 +334,18 @@
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* Scrollbar hide for Firefox */
-    #track-list { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-    #canvas-wrap { scrollbar-width: thin; scrollbar-color: var(--border) var(--surface); }
+    /* Scrollbar — webkit (Chrome/Safari) */
+    #track-list::-webkit-scrollbar,
+    #canvas-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+    #track-list::-webkit-scrollbar-track { background: transparent; }
+    #canvas-wrap::-webkit-scrollbar-track { background: var(--surface); }
+    #track-list::-webkit-scrollbar-thumb,
+    #canvas-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Inline-style replacements */
+    .btn-sm   { padding: 2px 8px; font-size: 11px; }
+    .ai-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+    .bpm-input { width: 56px; }
   </style>
 </head>
 <body>
@@ -330,7 +353,8 @@
 <!-- Header -->
 <header>
   <span class="logo">✦ COSMIC SCORE</span>
-  <input class="song-name-input" id="song-name" type="text" value="Untitled Song" />
+  <span class="version-badge">v1.0.0</span>
+  <input class="song-name-input" id="song-name" type="text" value="Untitled Song" title="曲名" placeholder="曲名" />
   <div class="header-sep"></div>
   <button class="btn" id="btn-load">読み込み</button>
   <button class="btn primary" id="btn-save">保存</button>
@@ -344,7 +368,7 @@
   <div id="track-panel">
     <div class="panel-header">
       TRACKS
-      <button class="btn" id="btn-add-track" style="padding:2px 8px;font-size:11px;">＋</button>
+      <button class="btn btn-sm" id="btn-add-track" title="トラックを追加">＋</button>
     </div>
     <div id="track-list"></div>
   </div>
@@ -365,10 +389,10 @@
       <div class="sep"></div>
       <!-- BPM -->
       <label class="lbl">BPM</label>
-      <input class="ctrl" id="bpm" type="number" value="120" min="40" max="300" step="1" style="width:56px;" />
+      <input class="ctrl bpm-input" id="bpm" type="number" value="120" min="40" max="300" step="1" title="BPM" placeholder="BPM" />
       <!-- Quantize -->
       <label class="lbl">量子化</label>
-      <select class="ctrl" id="quantize">
+      <select class="ctrl" id="quantize" title="量子化">>
         <option value="1">1小節</option>
         <option value="0.5">1/2</option>
         <option value="0.25" selected>1/4</option>
@@ -378,7 +402,7 @@
       <!-- Volume -->
       <div class="sep"></div>
       <label class="lbl">音量</label>
-      <input class="ctrl" id="master-vol" type="range" min="0" max="1" step="0.01" value="0.8" />
+      <input class="ctrl" id="master-vol" type="range" min="0" max="1" step="0.01" value="0.8" title="マスター音量" />
       <div class="sep"></div>
       <button class="btn danger" id="btn-clear-notes">クリア</button>
     </div>
@@ -390,7 +414,7 @@
 
     <!-- AI Panel -->
     <div id="ai-panel">
-      <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">✨ AI</span>
+      <span class="ai-label">✨ AI</span>
       <div class="mood-btns">
         <button class="mood-btn" data-mood="bright">明るい</button>
         <button class="mood-btn" data-mood="dark">暗い</button>
@@ -409,6 +433,7 @@
   <span id="status-pos">位置: 1:1:0</span>
   <span id="status-notes">ノート数: 0</span>
   <span id="status-info">ツール: 描画</span>
+  <span class="status-version">COSMIC SCORE v1.0.0</span>
 </div>
 
 <!-- Toast -->

@@ -12,7 +12,7 @@
 import { loadApiKey }                                          from './storage.js';
 import { getActiveSong, getActiveTrackIdx, addNotesToActiveTrack, replaceActiveTrackNotes, showToast } from './editor.js';
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 /* ======================================================
    Gemini API 呼び出し
