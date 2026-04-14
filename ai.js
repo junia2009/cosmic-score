@@ -187,14 +187,19 @@ ${NOTE_SCHEMA}
 function setLoading(on) {
   const genBtn     = document.getElementById('btn-ai-gen');
   const arrBtn     = document.getElementById('btn-ai-arrange');
+  const titleBtn   = document.getElementById('btn-ai-from-title');
   if (on) {
-    genBtn.textContent = '生成中…';
-    genBtn.disabled    = true;
-    arrBtn.disabled    = true;
+    genBtn.textContent   = '生成中…';
+    genBtn.disabled      = true;
+    arrBtn.disabled      = true;
+    titleBtn.disabled    = true;
+    titleBtn.textContent = '生成中…';
   } else {
-    genBtn.textContent = '生成';
-    genBtn.disabled    = false;
-    arrBtn.disabled    = false;
+    genBtn.textContent   = '生成';
+    genBtn.disabled      = false;
+    arrBtn.disabled      = false;
+    titleBtn.disabled    = false;
+    titleBtn.textContent = '🎵 曲名から生成';
   }
 }
 
@@ -222,4 +227,47 @@ document.getElementById('btn-ai-gen').addEventListener('click', async () => {
 document.getElementById('btn-ai-arrange').addEventListener('click', async () => {
   const prompt = document.getElementById('ai-prompt').value.trim();
   await arrangeExisting(prompt);
+});
+
+/* ======================================================
+   曲名から生成
+   ====================================================== */
+async function generateFromTitle(title, bars) {
+  const song  = getActiveSong();
+  const beats = bars * 4;
+
+  const fullPrompt = `
+You are a music transcription AI.
+Transcribe the following well-known piece into MIDI note data.
+Piece: "${title}"
+Length: ${bars} bars (${beats} beats, 4/4 time)
+BPM: ${song.bpm}
+
+IMPORTANT:
+- Only transcribe pieces whose copyright has expired (classical music, traditional songs, folk songs).
+- If the piece is under copyright or unknown, generate a royalty-free melody inspired by the style instead, and note that in your response.
+- Capture the melody as faithfully as possible.
+- Use beat 0 as the start.
+
+${NOTE_SCHEMA}
+`.trim();
+
+  setLoading(true);
+  const text = await callGemini(fullPrompt);
+  setLoading(false);
+  if (!text) return;
+
+  const parsed = extractJson(text);
+  const notes  = validateNotes(parsed);
+  if (notes.length === 0) { showToast('ノートデータの取得に失敗しました'); return; }
+
+  addNotesToActiveTrack(notes);
+  showToast(`🎵 「${title}」から ${notes.length}ノートを生成しました`);
+}
+
+document.getElementById('btn-ai-from-title').addEventListener('click', async () => {
+  const title = document.getElementById('song-title-input').value.trim();
+  const bars  = parseInt(document.getElementById('song-title-bars').value);
+  if (!title) { showToast('曲名を入力してください'); return; }
+  await generateFromTitle(title, bars);
 });

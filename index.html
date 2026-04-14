@@ -239,10 +239,15 @@
       border-top: 1px solid var(--border);
       padding: 10px 16px;
       display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .ai-row {
+      display: flex;
       align-items: center;
       gap: 10px;
-      flex-shrink: 0;
-      min-height: 52px;
     }
 
     #ai-prompt {
@@ -257,6 +262,18 @@
     }
     #ai-prompt:focus { outline: none; border-color: var(--accent); }
     #ai-prompt::placeholder { color: var(--text-muted); }
+
+    #song-title-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    #song-title-input:focus { outline: none; border-color: var(--accent); }
+    #song-title-input::placeholder { color: var(--text-muted); }
 
     .mood-btns { display: flex; gap: 6px; }
     .mood-btn {
@@ -353,7 +370,7 @@
 <!-- Header -->
 <header>
   <span class="logo">✦ COSMIC SCORE</span>
-  <span class="version-badge">v1.0.0</span>
+  <span class="version-badge">v1.1.0</span>
   <input class="song-name-input" id="song-name" type="text" value="Untitled Song" title="曲名" placeholder="曲名" />
   <div class="header-sep"></div>
   <button class="btn" id="btn-load">読み込み</button>
@@ -414,16 +431,30 @@
 
     <!-- AI Panel -->
     <div id="ai-panel">
-      <span class="ai-label">✨ AI</span>
-      <div class="mood-btns">
-        <button class="mood-btn" data-mood="bright">明るい</button>
-        <button class="mood-btn" data-mood="dark">暗い</button>
-        <button class="mood-btn" data-mood="calm">落ち着く</button>
-        <button class="mood-btn" data-mood="epic">壮大</button>
+      <!-- Row 1: ゼロ生成 / アレンジ -->
+      <div class="ai-row">
+        <span class="ai-label">✨ AI</span>
+        <div class="mood-btns">
+          <button class="mood-btn" data-mood="bright">明るい</button>
+          <button class="mood-btn" data-mood="dark">暗い</button>
+          <button class="mood-btn" data-mood="calm">落ち着く</button>
+          <button class="mood-btn" data-mood="epic">壮大</button>
+        </div>
+        <input id="ai-prompt" placeholder="例: このメロディの続きを作って、ハモリを追加して" />
+        <button class="btn primary" id="btn-ai-gen">生成</button>
+        <button class="btn" id="btn-ai-arrange">アレンジ</button>
       </div>
-      <input id="ai-prompt" placeholder="例: このメロディの続きを作って、ハモリを追加して" />
-      <button class="btn primary" id="btn-ai-gen">生成</button>
-      <button class="btn" id="btn-ai-arrange">アレンジ</button>
+      <!-- Row 2: 曲名から生成 -->
+      <div class="ai-row">
+        <span class="ai-label">🎵 曲名</span>
+        <input id="song-title-input" placeholder="例: モーツアルト あわそのピアノソナタ第15番, Bach Minuet in G ..." title="曲名を入力" />
+        <select class="ctrl" id="song-title-bars" title="生成小節数">
+          <option value="4">4小節</option>
+          <option value="8" selected>8小節</option>
+          <option value="16">16小節</option>
+        </select>
+        <button class="btn primary" id="btn-ai-from-title">🎵 曲名から生成</button>
+      </div>
     </div>
   </div>
 </main>
@@ -433,7 +464,7 @@
   <span id="status-pos">位置: 1:1:0</span>
   <span id="status-notes">ノート数: 0</span>
   <span id="status-info">ツール: 描画</span>
-  <span class="status-version">COSMIC SCORE v1.0.0</span>
+  <span class="status-version">COSMIC SCORE v1.1.0</span>
 </div>
 
 <!-- Toast -->
