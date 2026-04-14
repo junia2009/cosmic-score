@@ -363,6 +363,40 @@
     .btn-sm   { padding: 2px 8px; font-size: 11px; }
     .ai-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
     .bpm-input { width: 56px; }
+
+    /* ===== Welcome Modal ===== */
+    #modal-welcome .modal {
+      width: 520px;
+      max-width: 92vw;
+    }
+    .welcome-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .welcome-step {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .welcome-step .step-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+    .welcome-step .step-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .welcome-step .step-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .welcome-note { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+
+    /* ===== AI Panel hint ===== */
+    .ai-panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent2);
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+    .ai-hint { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -370,7 +404,7 @@
 <!-- Header -->
 <header>
   <span class="logo">✦ COSMIC SCORE</span>
-  <span class="version-badge">v1.1.0</span>
+  <span class="version-badge">v1.2.0</span>
   <input class="song-name-input" id="song-name" type="text" value="Untitled Song" title="曲名" placeholder="曲名" />
   <div class="header-sep"></div>
   <button class="btn" id="btn-load">読み込み</button>
@@ -396,32 +430,32 @@
     <!-- Toolbar -->
     <div class="toolbar">
       <!-- Transport -->
-      <button class="btn primary" id="btn-play">▶ Play</button>
-      <button class="btn" id="btn-stop">■ Stop</button>
+      <button class="btn primary" id="btn-play">▶ 再生</button>
+      <button class="btn" id="btn-stop">■ 停止</button>
       <div class="sep"></div>
       <!-- Tools -->
-      <button class="btn active" id="tool-draw" title="描画 (1)">✏</button>
-      <button class="btn" id="tool-select" title="選択 (2)">⬚</button>
-      <button class="btn" id="tool-erase" title="消去 (3)">✕</button>
+      <button class="btn active" id="tool-draw" title="音符を置く (1)">✏ 描く</button>
+      <button class="btn" id="tool-select" title="音符を選択 (2)">⬚ 選択</button>
+      <button class="btn" id="tool-erase" title="音符を消す (3)">✕ 消す</button>
       <div class="sep"></div>
       <!-- BPM -->
-      <label class="lbl">BPM</label>
-      <input class="ctrl bpm-input" id="bpm" type="number" value="120" min="40" max="300" step="1" title="BPM" placeholder="BPM" />
+      <label class="lbl" title="曲の速さ（1分間の拍数）">テンポ</label>
+      <input class="ctrl bpm-input" id="bpm" type="number" value="120" min="40" max="300" step="1" title="テンポ（1分間の拍数）" placeholder="120" />
       <!-- Quantize -->
-      <label class="lbl">量子化</label>
-      <select class="ctrl" id="quantize" title="量子化">>
-        <option value="1">1小節</option>
-        <option value="0.5">1/2</option>
-        <option value="0.25" selected>1/4</option>
-        <option value="0.125">1/8</option>
-        <option value="0.0625">1/16</option>
+      <label class="lbl" title="音符の最小切り単位">音符の長さ</label>
+      <select class="ctrl" id="quantize" title="音符の長さ">
+        <option value="1">丸音符Ｈ1小節）</option>
+        <option value="0.5">二分音符</option>
+        <option value="0.25" selected>四分音符</option>
+        <option value="0.125">八分音符</option>
+        <option value="0.0625">十六分音符</option>
       </select>
       <!-- Volume -->
       <div class="sep"></div>
       <label class="lbl">音量</label>
       <input class="ctrl" id="master-vol" type="range" min="0" max="1" step="0.01" value="0.8" title="マスター音量" />
       <div class="sep"></div>
-      <button class="btn danger" id="btn-clear-notes">クリア</button>
+      <button class="btn danger" id="btn-clear-notes">音符を全消し</button>
     </div>
 
     <!-- Canvas -->
@@ -431,27 +465,28 @@
 
     <!-- AI Panel -->
     <div id="ai-panel">
+      <div class="ai-panel-title">✨ AI作曲アシスタント &mdash; まずは下のボタンを押して曲を自動生成してみよう！</div>
       <!-- Row 1: ゼロ生成 / アレンジ -->
       <div class="ai-row">
-        <span class="ai-label">✨ AI</span>
+        <span class="ai-hint">🎧 雰囲気:</span>
         <div class="mood-btns">
-          <button class="mood-btn" data-mood="bright">明るい</button>
-          <button class="mood-btn" data-mood="dark">暗い</button>
-          <button class="mood-btn" data-mood="calm">落ち着く</button>
-          <button class="mood-btn" data-mood="epic">壮大</button>
+          <button class="mood-btn" data-mood="bright">☀️ 明るい</button>
+          <button class="mood-btn" data-mood="dark">🌙 暗い</button>
+          <button class="mood-btn" data-mood="calm">🌿 落ち着く</button>
+          <button class="mood-btn" data-mood="epic">⚡ 壮大</button>
         </div>
-        <input id="ai-prompt" placeholder="例: このメロディの続きを作って、ハモリを追加して" />
-        <button class="btn primary" id="btn-ai-gen">生成</button>
-        <button class="btn" id="btn-ai-arrange">アレンジ</button>
+        <input id="ai-prompt" placeholder="追加指示（空欄でOK）例: ピアノ風にして" />
+        <button class="btn primary" id="btn-ai-gen">✨ AIでメロディ生成</button>
+        <button class="btn" id="btn-ai-arrange">🎶 続きを作る</button>
       </div>
       <!-- Row 2: 曲名から生成 -->
       <div class="ai-row">
-        <span class="ai-label">🎵 曲名</span>
-        <input id="song-title-input" placeholder="例: モーツアルト あわそのピアノソナタ第15番, Bach Minuet in G ..." title="曲名を入力" />
+        <span class="ai-hint">🎵 曲名:</span>
+        <input id="song-title-input" placeholder="有名なクラシックの曲名を入力 例: Beethoven Fur Elise / はるかな春か..." title="曲名を入力" />
         <select class="ctrl" id="song-title-bars" title="生成小節数">
-          <option value="4">4小節</option>
-          <option value="8" selected>8小節</option>
-          <option value="16">16小節</option>
+          <option value="8">8小節</option>
+          <option value="16" selected>16小節</option>
+          <option value="32">32小節</option>
         </select>
         <button class="btn primary" id="btn-ai-from-title">🎵 曲名から生成</button>
       </div>
@@ -464,7 +499,7 @@
   <span id="status-pos">位置: 1:1:0</span>
   <span id="status-notes">ノート数: 0</span>
   <span id="status-info">ツール: 描画</span>
-  <span class="status-version">COSMIC SCORE v1.1.0</span>
+  <span class="status-version">COSMIC SCORE v1.2.0</span>
 </div>
 
 <!-- Toast -->
@@ -488,5 +523,35 @@
 <script type="module" src="engine.js"></script>
 <script type="module" src="editor.js"></script>
 <script type="module" src="ai.js"></script>
+
+<!-- Welcome Modal -->
+<div class="modal-overlay" id="modal-welcome">
+  <div class="modal">
+    <h2>🈵 COSMIC SCOREへようこそ！</h2>
+    <p>AIがメロディを作ってくれるブラウザ作曲スタジオです。まずは3ステップでお試しください！</p>
+    <div class="welcome-steps">
+      <div class="welcome-step">
+        <span class="step-icon">🔑</span>
+        <div class="step-title">STEP 1</div>
+        <div class="step-desc">右上の「🔑 API Key」ボタンからGemini APIキーを設定する</div>
+      </div>
+      <div class="welcome-step">
+        <span class="step-icon">✨</span>
+        <div class="step-title">STEP 2</div>
+        <div class="step-desc">AIパネルの「明るい」などのボタンを押して「AIでメロディ生成」をクリック</div>
+      </div>
+      <div class="welcome-step">
+        <span class="step-icon">▶️</span>
+        <div class="step-title">STEP 3</div>
+        <div class="step-desc">ツールバーの「▶ 再生」で曲を聞く！焫譜が気に入ったら保存できる</div>
+      </div>
+    </div>
+    <p class="welcome-note">💡 ピアノロールに直接クリックして音符を置くこともできます。左列の鍵盤が龴どの音かのガイドです。</p>
+    <div class="modal-btns">
+      <span class="welcome-skip" id="btn-welcome-skip">次回から表示しない</span>
+      <button class="btn primary" id="btn-welcome-close">🚀 さっそく始める</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

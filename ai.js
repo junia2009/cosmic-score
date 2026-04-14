@@ -10,7 +10,7 @@
  */
 
 import { loadApiKey }                                          from './storage.js';
-import { getActiveSong, getActiveTrackIdx, addNotesToActiveTrack, replaceActiveTrackNotes, showToast } from './editor.js';
+import { getActiveSong, getActiveTrackIdx, addNotesToActiveTrack, addFullTrack, replaceActiveTrackNotes, showToast } from './editor.js';
 
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
@@ -153,7 +153,7 @@ async function arrangeExisting(prompt) {
     pitch: n.pitch, beat: n.beat, duration: n.duration, velocity: n.velocity
   })));
 
-  const instruction = prompt || '続きのメロディを8ビート分作ってください';
+  const instruction = prompt || '続きのメロディも16ビート分作ってください';
 
   const fullPrompt = `
 You are a music composer AI.
@@ -236,6 +236,17 @@ async function generateFromTitle(title, bars) {
   const song  = getActiveSong();
   const beats = bars * 4;
 
+  const multiTrackSchema = `
+Return a JSON object with exactly THREE keys:
+{
+  "melody": [ ...notes ],
+  "bass":   [ ...notes ],
+  "chords": [ ...notes ]
+}
+Each note: { "pitch": int 24-107, "beat": number>=0, "duration": number>0, "velocity": int 1-127 }
+Wrap the entire JSON object in triple backticks. No other text.
+`.trim();
+
   const fullPrompt = `
 You are a music transcription AI.
 Transcribe the following well-known piece into MIDI note data.
@@ -245,11 +256,11 @@ BPM: ${song.bpm}
 
 IMPORTANT:
 - Only transcribe pieces whose copyright has expired (classical music, traditional songs, folk songs).
-- If the piece is under copyright or unknown, generate a royalty-free melody inspired by the style instead, and note that in your response.
-- Capture the melody as faithfully as possible.
-- Use beat 0 as the start.
+- If the piece is under copyright or unknown, generate a royalty-free melody inspired by the style instead.
+- Transcribe THREE parts: melody (main tune), bass (low register pitch 36-55), chords (harmony pitch 48-72).
+- All parts start at beat 0 and span ${beats} beats.
 
-${NOTE_SCHEMA}
+${multiTrackSchema}
 `.trim();
 
   setLoading(true);
@@ -257,12 +268,31 @@ ${NOTE_SCHEMA}
   setLoading(false);
   if (!text) return;
 
-  const parsed = extractJson(text);
-  const notes  = validateNotes(parsed);
-  if (notes.length === 0) { showToast('ノートデータの取得に失敗しました'); return; }
+  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const raw = fenceMatch ? fenceMatch[1] : text;
+  let multiData = null;
+  try { multiData = JSON.parse(raw.trim()); } catch {}
 
-  addNotesToActiveTrack(notes);
-  showToast(`🎵 「${title}」から ${notes.length}ノートを生成しました`);
+  if (multiData && (multiData.melody || multiData.bass || multiData.chords)) {
+    const parts = [
+      { key: 'melody', name: 'メロディ', color: '#7c5cfc' },
+      { key: 'bass',   name: 'ベース',   color: '#34d399' },
+      { key: 'chords', name: 'コード',   color: '#fbbf24' },
+    ];
+    let totalNotes = 0;
+    parts.forEach(({ key, name, color }) => {
+      const notes = validateNotes(multiData[key] ?? []);
+      if (notes.length === 0) return;
+      addFullTrack(name, color, notes);
+      totalNotes += notes.length;
+    });
+    showToast(`🎵 「${title}」 ${bars}小節・3トラックで ${totalNotes}ノートを生成しました`);
+  } else {
+    const notes = validateNotes(extractJson(text));
+    if (notes.length === 0) { showToast('ノートデータの取得に失敗しました'); return; }
+    addNotesToActiveTrack(notes);
+    showToast(`🎵 「${title}」から ${notes.length}ノートを生成しました`);
+  }
 }
 
 document.getElementById('btn-ai-from-title').addEventListener('click', async () => {

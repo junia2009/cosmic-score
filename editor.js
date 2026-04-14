@@ -20,7 +20,7 @@ const NOTE_HEIGHT = 12;
 const BEAT_WIDTH  = 40;   // px per beat
 const KEY_WIDTH   = 48;   // 鍵盤幅
 const HEADER_H    = 28;   // タイムライン高さ
-const TOTAL_BEATS = 64;   // 表示ビート数 (4/4拍子 × 16小節)
+const TOTAL_BEATS = 128;  // 表示ビート数 (4/4拍子 × 32小節)
 const BEATS_PER_BAR = 4;
 
 const TRACK_COLORS = [
@@ -218,7 +218,26 @@ function render() {
   c.lineTo(phX + 6, 0);
   c.lineTo(phX, 10);
   c.closePath(); c.fill();
-}
+
+  // --- 空のガイドテキスト ---
+  const totalNotes = song.tracks.reduce((s, t) => s + t.notes.length, 0);
+  if (totalNotes === 0 && !dragNote) {
+    const cx = KEY_WIDTH + (w - KEY_WIDTH) / 2;
+    const cy = h / 2;
+    c.save();
+    c.globalAlpha = 0.45;
+    c.fillStyle = '#a78bfa';
+    c.font = 'bold 18px Segoe UI, sans-serif';
+    c.textAlign = 'center';
+    c.fillText('✨ 下のAIパネルから曲を生成できます', cx, cy - 16);
+    c.font = '13px Segoe UI, sans-serif';
+    c.fillStyle = '#7c85a0';
+    c.fillText('またはこのピアノロール上をクリックドラッグして音符を置くこともできます', cx, cy + 12);
+    c.font = '12px Segoe UI, sans-serif';
+    c.fillStyle = '#4a5066';
+    c.fillText('← 左列の鍵盤は龴ガイド / 上が高い音、下が低い音', cx, cy + 34);
+    c.restore();
+  }
 
 function drawPianoKeys(c) {
   for (let pi = 0; pi < PITCH_COUNT; pi++) {
@@ -589,7 +608,39 @@ export function replaceActiveTrackNotes(notes) {
   track.notes = notes.map(n => ({ ...n, id: n.id || generateId() }));
   autosave(); render(); updateStatus();
 }
+/** 新しいトラックを作って notes を追加（AI一曲生成用） */
+export function addFullTrack(name, color, notes) {
+  const track = createDefaultTrack(name, color);
+  track.notes = notes.map(n => ({ ...n, id: n.id || generateId() }));
+  song.tracks.push(track);
+  activeTrackIdx = song.tracks.length - 1;
+  autosave(); renderTrackList(); render(); updateStatus();
+}
 export { showToast };
 
 /* ========== 起動 ========== */
 init();
+
+/* ========== ウェルカムモーダル ========== */
+(function initWelcome() {
+  const SKIP_KEY = 'cosmic_score_welcome_skip';
+  const overlay  = document.getElementById('modal-welcome');
+  if (!overlay) return;
+
+  // 「次回から表示しない」がセット済みなら表示しない
+  if (localStorage.getItem(SKIP_KEY)) {
+    overlay.classList.add('hidden');
+    return;
+  }
+
+  overlay.classList.remove('hidden');
+
+  document.getElementById('btn-welcome-close').addEventListener('click', () => {
+    overlay.classList.add('hidden');
+  });
+
+  document.getElementById('btn-welcome-skip').addEventListener('click', () => {
+    localStorage.setItem(SKIP_KEY, '1');
+    overlay.classList.add('hidden');
+  });
+})();
