@@ -1,0 +1,19 @@
+{
+  "name": "BGM Maker",
+  "short_name": "BGM Maker",
+  "description": "ブラウザで動くAI作曲スタジオ COSMIC SCORE",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a14",
+  "theme_color": "#7c5cfc",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}

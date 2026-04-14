@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>COSMIC SCORE</title>
+  <title>BGM Maker</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7c5cfc" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="BGM Maker" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -486,7 +494,7 @@
 <!-- Header -->
 <header>
   <span class="logo">✦ COSMIC SCORE</span>
-  <span class="version-badge">v1.3.5</span>
+  <span class="version-badge">v1.4.0</span>
   <input class="song-name-input" id="song-name" type="text" value="Untitled Song" title="曲名" placeholder="曲名" />
   <div class="header-sep"></div>
   <button class="btn" id="btn-load">読み込み</button>
@@ -598,7 +606,7 @@
   <span id="status-pos">位置: 1:1:0</span>
   <span id="status-notes">ノート数: 0</span>
   <span id="status-info">ツール: 描画</span>
-  <span class="status-version">COSMIC SCORE v1.3.5</span>
+  <span class="status-version">COSMIC SCORE v1.4.0</span>
 </div>
 
 <!-- Toast -->
@@ -653,5 +661,12 @@
     </div>
   </div>
 </div>
+
+<!-- Service Worker 登録 -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
 </body>
 </html>
