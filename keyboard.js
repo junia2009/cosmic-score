@@ -39,8 +39,9 @@ const PC_KEY_MAP = {
 };
 
 /* ===== 状態 ===== */
-let baseOctave = 4;    // デフォルト C4（MIDI60）
-let isVisible  = false;
+let baseOctave  = 4;    // デフォルト C4（MIDI60）
+let isVisible   = false;
+let practiceMode = false; // true = 音だけ鳴らし、譜面に書かない
 
 // key → { beat: number, pitch: number, startTime: number }
 const activeNotes = new Map();
@@ -70,11 +71,24 @@ function pitchOf(semitoneOffset) {
       renderKeys();
     });
 
+  document.getElementById('kb-practice-toggle')
+    ?.addEventListener('click', togglePractice);
+
   document.addEventListener('keydown', onPCKeyDown);
   document.addEventListener('keyup',   onPCKeyUp);
 
   renderKeys();
 })();
+
+/* ===== 練習モードトグル ===== */
+function togglePractice() {
+  practiceMode = !practiceMode;
+  const btn = document.getElementById('kb-practice-toggle');
+  if (btn) {
+    btn.classList.toggle('active', practiceMode);
+    btn.textContent = practiceMode ? '🔷 練習中' : '🔶 練習モード';
+  }
+}
 
 /* ===== 表示トグル ===== */
 function toggleKeyboard() {
@@ -222,6 +236,9 @@ function endNote(noteKey) {
 
   // サステイン停止
   engine.stopSustain(pitch);
+
+  // 練習モード中は譜面に書き込まない
+  if (practiceMode) return;
 
   let duration;
   if (engine.isPlaying) {
