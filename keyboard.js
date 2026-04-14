@@ -20,10 +20,10 @@ import { generateId } from './storage.js';
 
 /* ===== 定数 ===== */
 const OCTAVE_COUNT = 4;   // 表示オクターブ数
-const WHITE_W = 80;   // 白鍵の幅 (px)
-const WHITE_H = 180;  // 白鍵の高さ (px)
-const BLACK_W = 48;   // 黒鍵の幅 (px)
-const BLACK_H = 112;  // 黒鍵の高さ (px)
+const WHITE_W = 64;   // 白鍵の幅 (px)
+const WHITE_H = 150;  // 白鍵の高さ (px)
+const BLACK_W = 38;   // 黒鍵の幅 (px)
+const BLACK_H = 95;   // 黒鍵の高さ (px)
 
 // 1オクターブ内の白鍵/黒鍵のセミトーンオフセット（C=0 基準）
 const WHITE_SEMITONES       = [0, 2, 4, 5, 7, 9, 11]; // C D E F G A B
