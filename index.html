@@ -387,6 +387,82 @@
     .welcome-step .step-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
     .welcome-note { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
 
+    /* ===== Keyboard Panel ===== */
+    .kb-panel {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .kb-panel.visible { display: flex; }
+    .kb-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .kb-oct-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent2);
+      min-width: 36px;
+      text-align: center;
+    }
+    .kb-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .kb-hint-right { margin-left: auto; }
+    .kb-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .kb-wrap::-webkit-scrollbar { height: 4px; }
+    .kb-wrap::-webkit-scrollbar-track { background: transparent; }
+    .kb-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .kb-keys {
+      position: relative;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .kb-white {
+      position: absolute;
+      background: var(--piano-w);
+      border: 1px solid #888;
+      border-radius: 0 0 4px 4px;
+      box-sizing: border-box;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 5px;
+      transition: background .05s;
+    }
+    .kb-white:hover { background: #c8b4ff; }
+    .kb-white.kb-active { background: var(--accent); }
+    .kb-black {
+      position: absolute;
+      background: var(--piano-b);
+      border: 1px solid #555;
+      border-radius: 0 0 3px 3px;
+      box-sizing: border-box;
+      cursor: pointer;
+      z-index: 2;
+      transition: background .05s;
+    }
+    .kb-black:hover { background: #4c3a8c; }
+    .kb-black.kb-active { background: var(--accent2); }
+    .kb-label {
+      font-size: 9px;
+      color: #666;
+      pointer-events: none;
+      line-height: 1;
+    }
+
     /* ===== AI Panel hint ===== */
     .ai-panel-title {
       font-size: 12px;
@@ -404,7 +480,7 @@
 <!-- Header -->
 <header>
   <span class="logo">✦ COSMIC SCORE</span>
-  <span class="version-badge">v1.2.0</span>
+  <span class="version-badge">v1.3.0</span>
   <input class="song-name-input" id="song-name" type="text" value="Untitled Song" title="曲名" placeholder="曲名" />
   <div class="header-sep"></div>
   <button class="btn" id="btn-load">読み込み</button>
@@ -438,6 +514,8 @@
       <button class="btn" id="tool-select" title="音符を選択 (2)">⬚ 選択</button>
       <button class="btn" id="tool-erase" title="音符を消す (3)">✕ 消す</button>
       <div class="sep"></div>
+      <button class="btn" id="tool-keyboard" title="鍵盤入力モード (K)">🎹 鍵盤</button>
+      <div class="sep"></div>
       <!-- BPM -->
       <label class="lbl" title="曲の速さ（1分間の拍数）">テンポ</label>
       <input class="ctrl bpm-input" id="bpm" type="number" value="120" min="40" max="300" step="1" title="テンポ（1分間の拍数）" placeholder="120" />
@@ -461,6 +539,21 @@
     <!-- Canvas -->
     <div id="canvas-wrap">
       <canvas id="roll-canvas"></canvas>
+    </div>
+
+    <!-- Keyboard Panel -->
+    <div id="kb-panel" class="kb-panel">
+      <div class="kb-controls">
+        <span class="kb-hint">🎹 鍵盤入力</span>
+        <button class="btn btn-sm" id="kb-oct-down">◀ oct -</button>
+        <span id="kb-oct-label" class="kb-oct-label">C4</span>
+        <button class="btn btn-sm" id="kb-oct-up">oct + ▶</button>
+        <span class="kb-hint">PCキー: A S D F G H J K (白鍵) / W E T Y U (黒鍵)</span>
+        <span class="kb-hint kb-hint-right">停止中: ステップ入力 ｜ 再生中: リアルタイム録音</span>
+      </div>
+      <div class="kb-wrap">
+        <div id="kb-keys"></div>
+      </div>
     </div>
 
     <!-- AI Panel -->
@@ -499,7 +592,7 @@
   <span id="status-pos">位置: 1:1:0</span>
   <span id="status-notes">ノート数: 0</span>
   <span id="status-info">ツール: 描画</span>
-  <span class="status-version">COSMIC SCORE v1.2.0</span>
+  <span class="status-version">COSMIC SCORE v1.3.0</span>
 </div>
 
 <!-- Toast -->
@@ -523,6 +616,7 @@
 <script type="module" src="engine.js"></script>
 <script type="module" src="editor.js"></script>
 <script type="module" src="ai.js"></script>
+<script type="module" src="keyboard.js"></script>
 
 <!-- Welcome Modal -->
 <div class="modal-overlay" id="modal-welcome">

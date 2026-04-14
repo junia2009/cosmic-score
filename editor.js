@@ -597,6 +597,20 @@ function showToast(msg) {
 /* ========== AI連携ブリッジ（ai.jsから呼ぶ） ========== */
 export function getActiveSong()  { return song; }
 export function getActiveTrackIdx() { return activeTrackIdx; }
+export function getActiveTrack() { return song?.tracks?.[activeTrackIdx] ?? null; }
+export function getPlayheadBeat() { return playheadBeat; }
+export function setPlayheadBeat(b) {
+  playheadBeat = Math.max(0, b);
+  render();
+  updateStatus();
+  // プレイヘッドに追従してキャンバスを自動スクロール
+  const x = KEY_WIDTH + playheadBeat * BEAT_WIDTH;
+  const viewLeft  = wrap.scrollLeft;
+  const viewRight = viewLeft + wrap.clientWidth;
+  if (x > viewRight - 60 || x < viewLeft + 60) {
+    wrap.scrollLeft = Math.max(0, x - wrap.clientWidth / 2);
+  }
+}
 export function addNotesToActiveTrack(notes) {
   const track = song.tracks[activeTrackIdx];
   if (!track) return;

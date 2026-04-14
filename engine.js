@@ -47,6 +47,14 @@ class AudioEngine {
     if (this._masterGain) this._masterGain.gain.value = v;
   }
 
+  /** 即時プレビュー再生 (鍵盤モード用) */
+  previewNote(pitch, instrument = 'sine', durationSec = 0.3) {
+    this._ensureContext();
+    const freq = this._midiToFreq(pitch);
+    const now  = this._ctx.currentTime;
+    this._buildVoice(instrument, freq, now, durationSec, 0.8);
+  }
+
   play(song, startBeat = 0) {
     this.stop();
     this._ensureContext();
