@@ -31,6 +31,7 @@ class AudioEngine {
     this._nextBeat   = 0;   // 次にスケジュールするビート位置
     this.onBeatUpdate = null;
     this._rafId = null;
+    this._sustainNodes = new Map(); // pitch → {osc, gain}
   }
 
   /* ------ Public ------ */
@@ -53,6 +54,41 @@ class AudioEngine {
     const freq = this._midiToFreq(pitch);
     const now  = this._ctx.currentTime;
     this._buildVoice(instrument, freq, now, durationSec, 0.8);
+  }
+
+  /** サステイン開始 — 鍵盤を押している間ずっと音を鳴らす */
+  startSustain(pitch, instrument = 'sine') {
+    this._ensureContext();
+    const key = 'sus_' + pitch;
+    if (this._sustainNodes.has(key)) return;
+    const freq = this._midiToFreq(pitch);
+    const ctx  = this._ctx;
+    const now  = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.connect(this._masterGain);
+    // marimba/bass は sustain に不向きなので sine で代替
+    const type = ['sine','square','sawtooth','triangle'].includes(instrument) ? instrument : 'sine';
+    const osc  = ctx.createOscillator();
+    osc.type = type;
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.55, now + 0.01);
+    osc.start(now);
+    this._sustainNodes.set(key, { osc, gain });
+  }
+
+  /** サステイン停止 — 鍵盤を離したとき音をフェードアウト */
+  stopSustain(pitch) {
+    const key   = 'sus_' + pitch;
+    const nodes = this._sustainNodes.get(key);
+    if (!nodes) return;
+    const { osc, gain } = nodes;
+    const now = this._ctx.currentTime;
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0.0001, now + 0.08);
+    osc.stop(now + 0.1);
+    this._sustainNodes.delete(key);
   }
 
   play(song, startBeat = 0) {

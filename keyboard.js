@@ -1,7 +1,7 @@
 /**
  * keyboard.js — 仮想ピアノ鍵盤 + PCキーボード入力 + 録音
  *
- * 停止中: ステップ入力（プレイヘッドが quantize 分ずつ進む）
+ * 停止中: ステップ入力（長押しの時間を拍子に変換して音符長に反映、プレイヘッド自動前進）
  * 再生中: リアルタイム録音（押した瞬間〜離した瞬間のビート数で音符長を算出）
  *
  * PCキーマップ（1オクターブ, baseOctave 起点）:
@@ -19,6 +19,7 @@ import {
 import { generateId } from './storage.js';
 
 /* ===== 定数 ===== */
+const OCTAVE_COUNT = 4;   // 表示オクターブ数
 const WHITE_W = 36;   // 白鍵の幅 (px)
 const WHITE_H = 100;  // 白鍵の高さ (px)
 const BLACK_W = 22;   // 黒鍵の幅 (px)
@@ -41,7 +42,7 @@ const PC_KEY_MAP = {
 let baseOctave = 4;    // デフォルト C4（MIDI60）
 let isVisible  = false;
 
-// key → { beat: number, pitch: number }
+// key → { beat: number, pitch: number, startTime: number }
 const activeNotes = new Map();
 
 /* ===== MIDI ピッチ計算 ===== */
@@ -90,18 +91,18 @@ function updateOctaveLabel() {
   if (el) el.textContent = 'C' + baseOctave;
 }
 
-/* ===== 鍵盤HTML生成（2オクターブ = 14白鍵） ===== */
+/* ===== 鍵盤HTML生成（4オクターブ = 28白鍵） ===== */
 function renderKeys() {
   const container = document.getElementById('kb-keys');
   if (!container) return;
   container.innerHTML = '';
 
   // コンテナサイズ
-  container.style.width  = (14 * WHITE_W + 2) + 'px';
+  container.style.width  = (OCTAVE_COUNT * 7 * WHITE_W + 2) + 'px';
   container.style.height = (WHITE_H + 2) + 'px';
 
   // ── 白鍵（z-index 低い方を先に追加）──
-  for (let oct = 0; oct < 2; oct++) {
+  for (let oct = 0; oct < OCTAVE_COUNT; oct++) {
     WHITE_SEMITONES.forEach((semi, wi) => {
       const pitch    = pitchOf(oct * 12 + semi);
       const globalWi = oct * 7 + wi;
@@ -130,7 +131,7 @@ function renderKeys() {
   }
 
   // ── 黒鍵（白鍵より手前に重ねるため後から追加）──
-  for (let oct = 0; oct < 2; oct++) {
+  for (let oct = 0; oct < OCTAVE_COUNT; oct++) {
     BLACK_SEMITONES.forEach((semi, bi) => {
       const pitch      = pitchOf(oct * 12 + semi);
       const afterWhite = oct * 7 + BLACK_AFTER_WHITE_IDX[bi];
@@ -166,13 +167,13 @@ function startNote(noteKey, pitch) {
   if (activeNotes.has(noteKey)) return;
   if (pitch < 24 || pitch > 107) return; // ピアノロール表示範囲外は無視
 
-  // プレビュー再生
+  // サステイン再生（鍵を押している間音が続く）
   const track = getActiveTrack();
-  engine.previewNote(pitch, track?.instrument ?? 'sine');
+  engine.startSustain(pitch, track?.instrument ?? 'sine');
 
-  // 開始ビートを記憶（再生中なら現在ビート、停止中ならプレイヘッド）
+  // 開始ビートと開始時刻を記憶（再生中なら現在ビート、停止中ならプレイヘッド）
   const beat = engine.isPlaying ? engine.currentBeat : getPlayheadBeat();
-  activeNotes.set(noteKey, { beat, pitch });
+  activeNotes.set(noteKey, { beat, pitch, startTime: Date.now() });
 
   // 視覚フィードバック
   setKeyHighlight(pitch, true);
@@ -181,9 +182,12 @@ function startNote(noteKey, pitch) {
 /* ===== 音符終了 ===== */
 function endNote(noteKey) {
   if (!activeNotes.has(noteKey)) return;
-  const { beat, pitch } = activeNotes.get(noteKey);
+  const { beat, pitch, startTime } = activeNotes.get(noteKey);
   activeNotes.delete(noteKey);
   setKeyHighlight(pitch, false);
+
+  // サステイン停止
+  engine.stopSustain(pitch);
 
   let duration;
   if (engine.isPlaying) {
@@ -191,10 +195,15 @@ function endNote(noteKey) {
     const raw = Math.max(0, engine.currentBeat - beat);
     duration  = Math.max(0.0625, Math.round(raw / 0.0625) * 0.0625);
   } else {
-    // ステップ入力: 現在の量子化値を音符長として使用
-    const qEl = document.getElementById('quantize');
-    duration  = qEl ? parseFloat(qEl.value) : 0.25;
-    // プレイヘッドを1音符分前進
+    // ステップ入力: 長押しの実時間を BPM に基づきビート数に変換
+    const bpm     = parseFloat(document.getElementById('bpm')?.value ?? 120);
+    const qEl     = document.getElementById('quantize');
+    const q       = qEl ? parseFloat(qEl.value) : 0.25;
+    const holdMs  = Date.now() - startTime;
+    const rawBeats = holdMs / 1000 * (bpm / 60);
+    // 量子化グリッドにスナップ、最小 = 1量子化ステップ
+    duration = Math.max(q, Math.round(rawBeats / q) * q);
+    // プレイヘッドを実際の音符長分前進
     setPlayheadBeat(beat + duration);
   }
 
